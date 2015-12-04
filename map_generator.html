@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Robots2 Map Generator</title>
+
+        <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+        
+        <script type="application/javascript" src="jquery.min.js"></script>
+        <script type="application/javascript" src="map_generator.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Robots2 Map generator</h1>
+            <div class="row">
+                <div class="col-md-4">
+                    <form id="parameterForm" action="">
+                        <div class="form-group">
+                            <label for="inputWidth">Feldbreite</label>
+                            <input type="number" class="form-control" id="inputWidth" value="8" min="0" step="1" />
+                        </div>
+                        <div class="form-group">
+                            <label for="inputHeight">Feldhöhe</label>
+                            <input type="number" class="form-control" id="inputHeight" value="6" min="0" step="1" />
+                        </div>
+                        <div class="form-group">
+                            <label for="inputWallL">Wand-Wahrscheinlichkeit</label>
+                            <input type="number" class="form-control" id="inputWallL" value="0.2" min="0" step="0.0001" />
+                        </div>
+                        <div class="form-group">
+                            <label for="inputOneWayL">Einbahn-Wand-Wahrscheinlichkeit</label>
+                            <input type="number" class="form-control" id="inputOneWayL" value="0.1" min="0" step="0.0001" />
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                                <input id="inputBlindLane" type="checkbox" /> Sackgassen und geschlossene Felder erlauben
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputGrowingMode">Growingrate Modus</label>
+                            <select id="inputGrowingMode" class="form-control">
+                                <option value="s">Spots</option>
+                                <option value="r">Zufällig</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputGrowingMax">Growingrate Richtwert</label>
+                            <input type="number" class="form-control" id="inputGrowingMax" value="2000" min="0" step="1" />
+                        </div>
+                        <div class="form-group">
+                            <label for="inputInitialMode">Initialfutter Modus</label>
+                            <select id="inputInitialMode" class="form-control">
+                                <option value="g">Nach Growingrate</option>
+                                <option value="n">Keines</option>
+                                <option value="f">Voll</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-refresh"></span> Generieren</button>
+                        <hr />
+                        
+                        <div class="form-group">
+                            <label for="inputRobotSpeed">Virtual Robot speed</label>
+                            <input type="number" class="form-control" id="inputRobotSpeed" value="0.8" min="0" step="0.001" />
+                        </div>
+                        <div class="form-group">
+                            <label for="inputHesitationTime">Hesitation time</label>
+                            <input type="number" class="form-control" id="inputHesitationTime" value="3500" min="0" step="1" />
+                        </div>
+                        
+                        <button type="button" id="buttonDownload" class="btn btn-default"><span class="glyphicon glyphicon-download"></span> Download</button>
+                    </form>
+                </div>
+                <div class="col-md-8">
+                    <canvas id="canvas" width="100%" height="750"></canvas>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
