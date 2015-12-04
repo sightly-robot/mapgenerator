@@ -188,11 +188,11 @@ function downloadMap(map) {
                 "version": 1,
                 "width": mapWidth,
                 "height": mapHeight,
-                "fields": map
-            },
-            "gameParameters": {
-                "movementSpeed" : parseFloat($('#inputRobotSpeed').val()),
-                "maxStayTime": parseInt($('#inputHesitationTime').val())
+                "fields": map,
+                "gameParameters": {
+                    "movementSpeed" : parseFloat($('#inputRobotSpeed').val()),
+                    "maxStayTime": parseInt($('#inputHesitationTime').val())
+                }
             }
     });
     
