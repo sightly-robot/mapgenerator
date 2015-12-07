@@ -391,7 +391,7 @@ function downloadMap(map) {
     // Initiate download
     var a = window.document.createElement('a');
     a.href = window.URL.createObjectURL(new Blob([output], {type: 'application/json'}));
-    a.download = 'Map.json';
+    a.download = getCountry() + '.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -575,4 +575,11 @@ function canvas_rotated_triangle(context,x,y,r,rotation) {
     context.stroke();
     context.fill();
     context.closePath();
+}
+
+
+function getCountry() {
+     var countries = ['Afghanistan','Albania','Algeria','Andorra','Angola','Antarctica','Argentina','Australia','Austria','Azerbaijan','Bahamas','Bahrain','Bangladesh','Belgium','Bermuda','Bhutan','Bolivia','Brazil','Bulgaria','Cameroon','Canada','Chad','Chile','China','Colombia','Comoros','Congo','Croatia','Cuba','Cyprus','Denmark','Djibouti','Ecuador','Egypt','Eritrea','Ethiopia','Fiji','Finland','France','Georgia','Germany','Ghana','Gibraltar','Greece','Greenland','Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy','Jamaica','Japan','Jordan','Kazakhstan','Korea','Lebanon','Liechtenstein','Lithuania','Luxembourg','Madagascar','Maldives','Malta','Mexico','Monaco','Morocco','Myanmar','Namibia','Nepal','Netherlands','Nigeria','Norway','Pakistan','Panama','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Senegal','Seychelles','Singapore','Slovakia','Slovenia','Somalia','Spain','Sudan','Sweden','Switzerland','Taiwan','Thailand','Togo','Tunisia','Turkey','Ukraine','Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zimbabwe'];
+    
+    return countries[Math.floor(Math.random()*countries.length)];
 }
