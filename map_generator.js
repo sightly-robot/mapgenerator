@@ -1,42 +1,105 @@
 
 $(function() {
-    $('#parameterForm').submit(function(){
-        currentMap = mapGenerator(
+    $('#generateForm').submit(function(){
+        currentMap = generateMap(
                 parseInt($('#inputWidth').val()),
-                parseInt($('#inputHeight').val()),
+                parseInt($('#inputHeight').val())
+        );
+        drawMap($('#canvas')[0], currentMap);
+        
+        // Do other tasks automatically
+        $('#wallsForm').submit();
+        $('#growingForm').submit();
+        $('#foodForm').submit();
+        $('#startsForm').submit();
+        
+        return false;
+    });
+    
+    $('#wallsForm').submit(function(){
+        generateWalls(
+                currentMap,
                 parseFloat($('#inputWallL').val()),
                 parseFloat($('#inputOneWayL').val()),
-                $('#inputBlindLane').prop('checked'),
-                $('#inputGrowingMode').val(),
-                parseInt($('#inputGrowingMax').val()),
-                $('#inputInitialMode').val()
+                $('#inputBlindLane').prop('checked')
         );
         drawMap($('#canvas')[0], currentMap);
         return false;
     });
-    $('#buttonDownload').click(function() {downloadMap(currentMap)});
+    
+    $('#growingForm').submit(function(){
+        generateGrowing(
+                currentMap,
+                $('#inputGrowingMode').val(),
+                parseInt($('#inputGrowingMax').val()),
+                parseFloat($('#inputGrowingL').val()),
+                parseFloat($('#inputGrowingGrad').val())
+        );
+        drawMap($('#canvas')[0], currentMap);
+        return false;
+    });
+    
+    $('#foodForm').submit(function(){
+        generateFood(
+                currentMap,
+                $('#inputInitialMode').val(),
+                parseInt($('#inputFoodMax').val())
+        );
+        drawMap($('#canvas')[0], currentMap);
+        return false;
+    });
+    
+    $('#startsForm').submit(function(){
+        generateStarts(
+                currentMap,
+                parseInt($('#inputStartNumber').val()),
+                parseFloat($('#inputStartDist').val())
+        );
+        drawMap($('#canvas')[0], currentMap);
+        return false;
+    });
+    
+    $('#downloadForm').submit(function() {
+        downloadMap(currentMap)
+        return false;
+    });
+    
+    /* Generate inital map */
+    $('#generateForm').submit();
 });
 
-function mapGenerator(width, height, wallL, oneWayL, allowBlindLane, growingMode, growingMax, initialFoodMode) {
-    
+function generateMap(width, height) {
     // Build map
     var map = [];
     for (var y = 0; y < height; y++) {
         map[y] = [];
+        for (var x = 0; x < width; x++) {
+            map[y][x] = {
+                "growthRate": 0,
+                "initialResources": 0,
+                "walls": ""
+            };
+        }
+    }
+    return map;
+}
+
+function generateWalls(map, wallL, oneWayL, allowBlindLane) {
+    var height = map.length;
+    var width = map[0].length;
+  
+    // Generate random walls
+    for (var y = 0; y < height; y++) {
         for (var x = 0; x < width; x++) {
             var n = (Math.random() < wallL || y == 0) ? "n" : "";
             var e = (Math.random() < wallL || x == width-1) ? "e" : "";
             var s = (Math.random() < wallL || y == height-1) ? "s" : "";
             var w = (Math.random() < wallL || x == 0) ? "w" : "";
             
-            map[y][x] = {
-                "growthRate": 0,
-                "initialResources": 0,
-                "walls": n+e+s+w
-            };
+            map[y][x].walls = n+e+s+w;
         }
     }
-    
+  
     // Transform oneway walls to full walls
     for (var y = 0; y < height; y++) {
         for (var x = 0; x < width; x++) {
@@ -97,23 +160,57 @@ function mapGenerator(width, height, wallL, oneWayL, allowBlindLane, growingMode
             }
         }
     }
+}
+
+
+function generateGrowing(map, growingMode, growingMax, growingL, gradient) {
+    var height = map.length;
+    var width = map[0].length;
     
-    // generate growing rate
-    if (growingMode == 'r') {
+    // Clear growing rates
+    for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+            map[y][x].growthRate = 0;
+        }
+    }
+  
+    // Remove growing rates -- so do nothing
+    if (growingMode == 'n') {
+        
+    
+    // Generate constant growing rates
+    } else if (growingMode == 'c') {
         for (var y = 0; y < height; y++) {
             for (var x = 0; x < width; x++) {
-                map[y][x].growthRate = Math.random() < 1 ? Math.round(1/(1/growingMax/100 + Math.random()*(1/growingMax)*90/100)) : 0;
+                map[y][x].growthRate = growingMax;
             }
         }
+    
+    // Generate constant growing rates on random fields
+    } else if (growingMode == 'cr') {
+        for (var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
+                map[y][x].growthRate = Math.random() < growingL ? growingMax : 0;
+            }
+        }
+    
+    // Generate random growing rates
+    } else if (growingMode == 'r') {
+        for (var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
+                map[y][x].growthRate = Math.round(1/(1/growingMax/1000 + Math.random()*(1/growingMax)*.999));
+            }
+        }
+    
+    // Generate growing spots
     } else if (growingMode == 's') {
-        var countSpots = 1 + Math.random() * 4;
-        var decrease = 40/Math.sqrt(width*height);
-        var spotPeak = growingMax*countSpots/4;
+        var countSpots = 1 + Math.random() * 8 * growingL;
+        var decrease = gradient/Math.sqrt(width*height);
+        var spotPeak = growingMax*countSpots/gradient*7;
         
         for (var i=0;i<countSpots;i++) {
             var cx = Math.random() * width;
             var cy = Math.random() * height;
-            console.log(cx + " - " + cy);
             for (y = 0; y < height; y++) {
                 for (x = 0; x < width; x++) {
                     var distance = Math.sqrt(Math.pow(x-cx,2)+Math.pow(y-cy,2));
@@ -124,24 +221,94 @@ function mapGenerator(width, height, wallL, oneWayL, allowBlindLane, growingMode
             }
         }
     }
-            
-    // generate inital food
+}
+
+function generateFood (map, initialFoodMode, intialFoodValue) {
+    var height = map.length;
+    var width = map[0].length;
+  
+    // find maximum inverted growingRate
+    var maxInvGrowing = 0;
     for (var y = 0; y < height; y++) {
         for (var x = 0; x < width; x++) {
-            if (initialFoodMode == 'f') {
-                map[y][x].initialResources = 10;
-            } else if (initialFoodMode == 'n') {
-                map[y][x].initialResources = 0;                
-            } else if (initialFoodMode == 'g') {
-                map[y][x].initialResources = (map[y][x].growthRate == 0) ? 0 :
-                        Math.max(0,Math.min(10,Math.round((1/map[y][x].growthRate) * growingMax * 9 - 1)));
-            }
+            if (map[y][x].growthRate != 0 && 1/map[y][x].growthRate > maxInvGrowing)
+                maxInvGrowing = 1/map[y][x].growthRate;
         }
     }
     
-    return map;
+    for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+            // Constant initial food
+            if (initialFoodMode == 'c') {
+                map[y][x].initialResources = intialFoodValue;
+            
+            // No initial food
+            } else if (initialFoodMode == 'n') {
+                map[y][x].initialResources = 0;
+            
+            // Constant initial food
+            } else if (initialFoodMode == 'g') {
+                map[y][x].initialResources = (map[y][x].growthRate == 0) ? 0 :
+                        Math.round((1/map[y][x].growthRate /maxInvGrowing) * intialFoodValue);
+            }
+        }
+    }
 }
 
+function generateStarts (map, number, minDist) {
+    var height = map.length;
+    var width = map[0].length;
+    
+    // Clear start positions
+    for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+            delete map[y][x].startPosition;
+        }
+    }
+    
+    var i = 0;
+    var n = 0; // Used to prevent endless loop
+    // Stores all fields blocked by start positions and the next field the roboters will enter
+    var blockedFields = [];
+    
+    while(i < number && n < 100*number) {
+        n++;
+        var x = Math.floor(Math.random()*width);
+        var y = Math.floor(Math.random()*height);
+        
+        if (map[y][x].startPosition || minDistOfList(x,y,blockedFields) < minDist)
+            continue;
+        
+        var directions = [];
+        var walls = "nesw";
+        for (var j=0;j<walls.length;j++)
+            if (!hasDirection(map[y][x].walls,walls[j]) &&
+                    minDistOfList(nextCell(x,y, walls[j]).x,nextCell(x,y,walls[j]).y,blockedFields) > minDist)
+                directions.push(walls[j]);
+        
+        if (directions.length == 0)
+            continue;
+        
+        var d = directions[Math.floor(Math.random() * directions.length)];
+        map[y][x].startPosition = d;
+        blockedFields.push({x:x,y:y});
+        blockedFields.push(nextCell(x,y,d));
+        i++;
+    }
+}
+function minDistOfList(x,y,fields) {
+    var minDist = Number.POSITIVE_INFINITY;
+    for (var i=0; i<fields.length; i++) {
+        var dist = Math.sqrt(Math.pow(fields[i].x-x,2)+Math.pow(fields[i].y-y,2));
+        if (dist < minDist)
+            minDist = dist;
+    }
+    return minDist;
+}
+
+/* **************** *
+ * Helper functions *
+ * **************** */
 function hasDirection(current, direction) {
     for (var i=0; i<current.length; i++)
         if (current[i] == direction)
@@ -157,8 +324,33 @@ function addDirection(current, direction) {
 function removeDirection(current, direction) {
     return current.replace(direction, "");
 }
+function nextCell(x,y,orientation) {var nextX;
+    var nextY;
+    switch(orientation) {
+        case 'n':
+            nextX = x;
+            nextY = y-1;
+            break;
+        case 'e':
+            nextX = x+1;
+            nextY = y;
+            break;
+        case 's':
+            nextX = x;
+            nextY = y+1;
+            break;
+        case 'w':
+            nextX = x-1;
+            nextY = y;
+            break;
+    }
+    
+    return {x:nextX,y:nextY};
+}
 
-
+/* ************ *
+ * Map download *
+ * ************ */
 function downloadMap(map) {
     var mapHeight = map.length;
     var mapWidth = map[0].length;
@@ -205,6 +397,10 @@ function downloadMap(map) {
     document.body.removeChild(a);
 }
 
+
+/* *********** *
+ * Map drawing *
+ * *********** */
 function drawMap(canvas, map) {
     var mapHeight = map.length;
     var mapWidth = map[0].length;
@@ -212,6 +408,8 @@ function drawMap(canvas, map) {
     var ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     fitToContainer(canvas);
+    
+    var fieldPixelWidth = Math.min(canvas.width / mapWidth, canvas.height / mapHeight);
     
     // find maximum inverted growingRate
     var maxInvGrowing = 0;
@@ -225,28 +423,87 @@ function drawMap(canvas, map) {
         }
     }
     
-    // Draw growing rates
-    var fieldPixelWidth = Math.min(canvas.width / mapWidth, canvas.height / mapHeight);
+    // Draw growingRate background
     for (var y = 0; y < mapHeight; y++) {
         for (var x = 0; x < mapWidth; x++) {
             if (map[y][x].growthRate != 0) {
-                ctx.fillStyle = "rgba(255, 0, 255, "+ (1/map[y][x].growthRate/maxInvGrowing) +")";
+                ctx.fillStyle = "rgba(255, 0, 255, "+ (1/map[y][x].growthRate/maxInvGrowing*0.8) +")";
                 ctx.fillRect(x*fieldPixelWidth, y*fieldPixelWidth, fieldPixelWidth, fieldPixelWidth);
-                
-                ctx.fillStyle = "green";
-                ctx.textAlign = "center";
-                ctx.font = "8pt Helvetica";
-                ctx.fillText((Math.round(map[y][x].growthRate / 100)/10), (x+.5)*fieldPixelWidth, (y+.9)*fieldPixelWidth);
-                ctx.fillStyle = "blue";
-                ctx.fillText(map[y][x].initialResources, (x+.5)*fieldPixelWidth, (y+.5)*fieldPixelWidth);
             }
         }
     }
     
+    // Draw start positions
+    ctx.lineWidth = 2;
+    ctx.fillStyle = "rgba(255, 127, 0, .5)";
+    ctx.strokeStyle = "rgba(255, 127, 0, .9)";
+    for (var y = 0; y < mapHeight; y++) {
+        for (var x = 0; x < mapWidth; x++) {
+            if (map[y][x].startPosition) {
+                var rotation;
+                switch(map[y][x].startPosition) {
+                    case 'n':
+                        rotation = Math.PI*3/2;
+                        break;
+                    case 'e':
+                        rotation = 0;
+                        break;
+                    case 's':
+                        rotation = Math.PI/2;
+                        break;
+                    case 'w':
+                        rotation = Math.PI;
+                        break;
+                }
+                
+                canvas_rotated_triangle(ctx,(x+.5)*fieldPixelWidth,(y+.5)*fieldPixelWidth,.4*fieldPixelWidth,rotation);
+            }
+        }
+    }
     
+    // Draw growing rates, initial food and numbers
+    ctx.textAlign = "center";
+    ctx.font = Math.round(fieldPixelWidth * 0.18) + "pt Helvetica";
+    for (var y = 0; y < mapHeight; y++) {
+        for (var x = 0; x < mapWidth; x++) {
+            if (map[y][x].growthRate != 0) {
+                ctx.fillStyle = "blue";
+                ctx.fillText((Math.round(map[y][x].growthRate / 100)/10) + "s", (x+.6)*fieldPixelWidth, (y+.8)*fieldPixelWidth);
+            }
+            if (map[y][x].initialResources != 0) {
+                ctx.fillStyle = "rgba(0,255,0,.5)";
+                for(var i=1; i<=map[y][x].initialResources; i++) {
+                    ctx.fillRect((x+.05)*fieldPixelWidth, (y+1-i/12-5/84)*fieldPixelWidth, fieldPixelWidth*.2, fieldPixelWidth/14);
+                }
+                ctx.fillStyle = "green";
+                ctx.fillText(map[y][x].initialResources, (x+.6)*fieldPixelWidth, (y+.4)*fieldPixelWidth);
+            }
+        }
+    }
+    
+    // draw grid
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
+    ctx.strokeStyle = '#888';
+    for (var y = 0; y <= mapHeight; y++) {
+        ctx.beginPath();
+        ctx.moveTo(0, y*fieldPixelWidth);
+        ctx.lineTo(mapWidth*fieldPixelWidth,y*fieldPixelWidth);
+        ctx.stroke();
+        ctx.closePath();
+    }
+    for (var x = 0; x <= mapWidth; x++) {
+        ctx.beginPath();
+        ctx.moveTo(x*fieldPixelWidth,0);
+        ctx.lineTo(x*fieldPixelWidth,mapHeight*fieldPixelWidth);
+        ctx.stroke();
+        ctx.closePath();
+    }
+    
+    // Draw walls
     ctx.lineWidth = fieldPixelWidth / 20;
     ctx.lineCap = "square";
-    // Draw walls
+    ctx.strokeStyle = 'black';
     for (var y = 0; y < mapHeight-1; y++) {
         for (var x = 0; x < mapWidth-1; x++) {
             var te = hasDirection(map[y][x].walls,"e");
@@ -277,7 +534,7 @@ function drawMap(canvas, map) {
                         canvas_arrow(ctx,(x+.5)*fieldPixelWidth,(y+.8)*fieldPixelWidth,(x+.5)*fieldPixelWidth,(y+1.2)*fieldPixelWidth,ctx.lineWidth * 3);
                     else
                         canvas_arrow(ctx,(x+.5)*fieldPixelWidth,(y+1.2)*fieldPixelWidth,(x+.5)*fieldPixelWidth,(y+.8)*fieldPixelWidth,ctx.lineWidth * 3);
-                    ctx.setLineDash([ctx.lineWidth * 3,ctx.lineWidth * 3]);                        
+                    ctx.setLineDash([ctx.lineWidth * 3,ctx.lineWidth * 3]);
                 }
                 ctx.beginPath();
                 ctx.moveTo((x)*fieldPixelWidth, (y+1)*fieldPixelWidth);
@@ -307,5 +564,15 @@ function canvas_arrow(context, fromx, fromy, tox, toy, headlen){
     context.moveTo(tox, toy);
     context.lineTo(tox-headlen*Math.cos(angle+Math.PI/6),toy-headlen*Math.sin(angle+Math.PI/6));
     context.stroke();
+    context.closePath();
+}
+function canvas_rotated_triangle(context,x,y,r,rotation) {
+    context.beginPath();
+    context.moveTo(x + r*Math.cos(rotation), y+r*Math.sin(rotation));
+    context.lineTo(x + r*Math.cos(rotation+Math.PI*2/3), y+r*Math.sin(rotation+Math.PI*2/3));
+    context.lineTo(x + r*Math.cos(rotation+Math.PI*4/3), y+r*Math.sin(rotation+Math.PI*4/3));
+    context.lineTo(x + r*Math.cos(rotation), y+r*Math.sin(rotation));
+    context.stroke();
+    context.fill();
     context.closePath();
 }

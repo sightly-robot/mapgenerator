@@ -17,60 +17,120 @@
             <h1>Robots2 Map generator</h1>
             <div class="row">
                 <div class="col-md-4">
-                    <form id="parameterForm" action="">
-                        <div class="form-group">
-                            <label for="inputWidth">Feldbreite</label>
-                            <input type="number" class="form-control" id="inputWidth" value="8" min="0" step="1" />
+                    <form id="generateForm" action="">
+                        <div class="form-group row">
+                            <div class="col-md-6">
+                                <label for="inputWidth">Feldbreite</label>
+                                <input type="number" class="form-control" id="inputWidth" value="8" min="0" step="1" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="inputHeight">Feldhöhe</label>
+                                <input type="number" class="form-control" id="inputHeight" value="6" min="0" step="1" />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="inputHeight">Feldhöhe</label>
-                            <input type="number" class="form-control" id="inputHeight" value="6" min="0" step="1" />
-                        </div>
-                        <div class="form-group">
-                            <label for="inputWallL">Wand-Wahrscheinlichkeit</label>
-                            <input type="number" class="form-control" id="inputWallL" value="0.2" min="0" step="0.0001" />
-                        </div>
-                        <div class="form-group">
-                            <label for="inputOneWayL">Einbahn-Wand-Wahrscheinlichkeit</label>
-                            <input type="number" class="form-control" id="inputOneWayL" value="0.1" min="0" step="0.0001" />
+                        <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-refresh"></span> Neue Map erzeugen</button>
+                    </form>
+                    <hr />
+                    
+                    <form id="wallsForm" action="">
+                        <div class="form-group row">
+                            <div class="col-md-6">
+                                <label for="inputWallL">Wand-Wahrscheinlichkeit</label>
+                                <input type="number" class="form-control" id="inputWallL" value="0.2" min="0" max="1" step="0.001" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="inputOneWayL">Einbahn-Wand-Wahrscheinlichkeit</label>
+                                <input type="number" class="form-control" id="inputOneWayL" value="0.1" min="0" max="1" step="0.001" />
+                            </div>
                         </div>
                         <div class="checkbox">
                             <label>
                                 <input id="inputBlindLane" type="checkbox" /> Sackgassen und geschlossene Felder erlauben
                             </label>
                         </div>
-                        <div class="form-group">
-                            <label for="inputGrowingMode">Growingrate Modus</label>
-                            <select id="inputGrowingMode" class="form-control">
-                                <option value="s">Spots</option>
-                                <option value="r">Zufällig</option>
-                            </select>
+                        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-menu-hamburger"></span> Wände erzeugen</button>
+                     </form>
+                     <hr />
+                     
+                     <form id="growingForm" action="">
+                        <div class="form-group row">
+                            <div class="col-md-6">
+                                <label for="inputGrowingMode">Growingrate Modus</label>
+                                <select id="inputGrowingMode" class="form-control">
+                                    <option value="n">Keine</option>
+                                    <option value="c">Konstant</option>
+                                    <option value="cr">Konstant (zufällige Felder)</option>
+                                    <option value="r">Zufällig</option>
+                                    <option value="s" selected="selected">Spots</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="inputGrowingMax">Growingrate Richtwert</label>
+                                <input type="number" class="form-control" id="inputGrowingMax" value="2000" min="0" step="1" />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="inputGrowingMax">Growingrate Richtwert</label>
-                            <input type="number" class="form-control" id="inputGrowingMax" value="2000" min="0" step="1" />
+                        <div class="form-group row">
+                            <div class="col-md-6">
+                                <label for="inputGrowingL">Growing Wahrscheinlichkeit</label>
+                                <input type="number" class="form-control" id="inputGrowingL" value="0.5" min="0" max="1" step="0.001" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="inputGrowingGrad">Growingrate Abfall</label>
+                                <input type="number" class="form-control" id="inputGrowingGrad" value="40" min="0.5" step="0.1" />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="inputInitialMode">Initialfutter Modus</label>
-                            <select id="inputInitialMode" class="form-control">
-                                <option value="g">Nach Growingrate</option>
-                                <option value="n">Keines</option>
-                                <option value="f">Voll</option>
-                            </select>
+                        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-grain"></span> GrowingRate erzeugen</button>
+                     </form>
+                     <hr />
+                     
+                     <form id="foodForm" action="">
+                        <div class="form-group row">
+                            <div class="col-md-6">
+                                <label for="inputInitialMode">Initialfutter Modus</label>
+                                <select id="inputInitialMode" class="form-control">
+                                    <option value="n">Keines</option>
+                                    <option value="c">Konstant</option>
+                                    <option value="g" selected="selected">Nach Growingrate</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="inputFoodMax">Futter Maximum</label>
+                                <input type="number" class="form-control" id="inputFoodMax" value="10" min="0" max="10" step="1" />
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-refresh"></span> Generieren</button>
+                        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-apple"></span> Initialfutter erzeugen</button>
                         <hr />
-                        
-                        <div class="form-group">
-                            <label for="inputRobotSpeed">Virtual Robot speed</label>
-                            <input type="number" class="form-control" id="inputRobotSpeed" value="0.8" min="0" step="0.001" />
+                     </form>
+                     <hr />
+                     
+                     <form id="startsForm" action="">
+                        <div class="form-group row">
+                            <div class="col-md-6">
+                                <label for="inputStartNumber">Anzahl Starts</label>
+                                <input type="number" class="form-control" id="inputStartNumber" value="4" min="0" step="1" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="inputStartDist">Minimum Startabstand</label>
+                                <input type="number" class="form-control" id="inputStartDist" value="1" min="0" step="0.1" />
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="inputHesitationTime">Hesitation time</label>
-                            <input type="number" class="form-control" id="inputHesitationTime" value="3500" min="0" step="1" />
+                        <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-play"></span> Startpositionen erzeugen</button>
+                        <hr />
+                     </form>
+                     
+                     <form id="downloadForm" action="">
+                        <div class="form-group row">
+                            <div class="col-md-6">
+                                <label for="inputRobotSpeed">Virtual Robot speed</label>
+                                <input type="number" class="form-control" id="inputRobotSpeed" value="0.8" min="0" step="0.001" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="inputHesitationTime">Hesitation time</label>
+                                <input type="number" class="form-control" id="inputHesitationTime" value="3500" min="0" step="1" />
+                            </div>
                         </div>
                         
-                        <button type="button" id="buttonDownload" class="btn btn-default"><span class="glyphicon glyphicon-download"></span> Download</button>
+                        <button type="submit" id="buttonDownload" class="btn btn-info"><span class="glyphicon glyphicon-download"></span> Download</button>
                     </form>
                 </div>
                 <div class="col-md-8">
