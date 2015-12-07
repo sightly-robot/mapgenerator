@@ -114,48 +114,46 @@ function generateWalls(map, wallL, oneWayL, allowBlindLane) {
         }
     }
     
-    // Delete blind lanes
-    if (!allowBlindLane) {
-        for (var y = 0; y < height; y++) {
-            for (var x = 0; x < width; x++) {
-                while (map[y][x].walls.length > 2) {
-                    var deletable = [];
-                    if (y != 0 && hasDirection(map[y][x].walls, "n"))
-                        deletable.push("n");
-                    if (x != width-1 && hasDirection(map[y][x].walls, "e"))
-                        deletable.push("e");
-                    if (y != height-1 && hasDirection(map[y][x].walls, "s"))
-                        deletable.push("s");
-                    if (x != 0 && hasDirection(map[y][x].walls, "w"))
-                        deletable.push("w");
-                    
-                    var i = Math.floor(Math.random()*deletable.length);
-                    map[y][x].walls = removeDirection(map[y][x].walls,deletable[i]);
-                    
-                    // Delete other side, too, if we don't want oneway walls
-                    if (Math.random() >= oneWayL) {
-                        var othercell;
-                        var wall;
-                        switch(deletable[i]) {
-                            case 'n':
-                                othercell = map[y-1][x];
-                                wall = 's';
-                                break;
-                            case 'e':
-                                othercell = map[y][x+1];
-                                wall = 'w';
-                                break;
-                            case 's':
-                                othercell = map[y+1][x];
-                                wall = 'n';
-                                break;
-                            case 'w':
-                                othercell = map[y][x-1];
-                                wall = 'e';
-                                break;
-                        }
-                        othercell.walls = removeDirection(othercell.walls,wall);
+    // Delete blind lanes and closed boxes
+    for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+            while (map[y][x].walls.length > (allowBlindLane ? 3 : 2)) {
+                var deletable = [];
+                if (y != 0 && hasDirection(map[y][x].walls, "n"))
+                    deletable.push("n");
+                if (x != width-1 && hasDirection(map[y][x].walls, "e"))
+                    deletable.push("e");
+                if (y != height-1 && hasDirection(map[y][x].walls, "s"))
+                    deletable.push("s");
+                if (x != 0 && hasDirection(map[y][x].walls, "w"))
+                    deletable.push("w");
+                
+                var i = Math.floor(Math.random()*deletable.length);
+                map[y][x].walls = removeDirection(map[y][x].walls,deletable[i]);
+                
+                // Delete other side, too, if we don't want oneway walls
+                if (Math.random() >= oneWayL) {
+                    var othercell;
+                    var wall;
+                    switch(deletable[i]) {
+                        case 'n':
+                            othercell = map[y-1][x];
+                            wall = 's';
+                            break;
+                        case 'e':
+                            othercell = map[y][x+1];
+                            wall = 'w';
+                            break;
+                        case 's':
+                            othercell = map[y+1][x];
+                            wall = 'n';
+                            break;
+                        case 'w':
+                            othercell = map[y][x-1];
+                            wall = 'e';
+                            break;
                     }
+                    othercell.walls = removeDirection(othercell.walls,wall);
                 }
             }
         }
@@ -216,7 +214,7 @@ function generateGrowing(map, growingMode, growingMax, growingL, gradient) {
                     var distance = Math.sqrt(Math.pow(x-cx,2)+Math.pow(y-cy,2));
                     map[y][x].growthRate = 1/(
                             (map[y][x].growthRate == 0 ? 0 : 1/map[y][x].growthRate)
-                            + 1/(1 + decrease * distance) * 1/spotPeak);
+                            + 1/(1 + decrease * Math.pow(distance,1.6)) * 1/spotPeak);
                 }
             }
         }
@@ -241,6 +239,10 @@ function generateFood (map, initialFoodMode, intialFoodValue) {
             // Constant initial food
             if (initialFoodMode == 'c') {
                 map[y][x].initialResources = intialFoodValue;
+            
+            // Random initial food
+            } else if (initialFoodMode == 'r') {
+                map[y][x].initialResources = Math.floor(Math.random(intialFoodValue+1));
             
             // No initial food
             } else if (initialFoodMode == 'n') {
@@ -504,43 +506,46 @@ function drawMap(canvas, map) {
     ctx.lineWidth = fieldPixelWidth / 20;
     ctx.lineCap = "square";
     ctx.strokeStyle = 'black';
-    for (var y = 0; y < mapHeight-1; y++) {
-        for (var x = 0; x < mapWidth-1; x++) {
-            var te = hasDirection(map[y][x].walls,"e");
-            var nw = hasDirection(map[y][x+1].walls,"w");
-            var ts = hasDirection(map[y][x].walls,"s");
-            var nn = hasDirection(map[y+1][x].walls,"n");
-            
-            if (te || nw) {
-                ctx.setLineDash([]);
-                if (!(te && nw)) {
-                    if (nw)
-                        canvas_arrow(ctx,(x+.8)*fieldPixelWidth,(y+.5)*fieldPixelWidth,(x+1.2)*fieldPixelWidth,(y+.5)*fieldPixelWidth,ctx.lineWidth * 3);
-                    else
-                        canvas_arrow(ctx,(x+1.2)*fieldPixelWidth,(y+.5)*fieldPixelWidth,(x+.8)*fieldPixelWidth,(y+.5)*fieldPixelWidth,ctx.lineWidth * 3);
-                    ctx.setLineDash([ctx.lineWidth * 3,ctx.lineWidth * 3]);                        
-                }
-                ctx.beginPath();
-                ctx.moveTo((x+1)*fieldPixelWidth, (y)*fieldPixelWidth);
-                ctx.lineTo((x+1)*fieldPixelWidth, (y+1)*fieldPixelWidth);
-                ctx.stroke();
-                ctx.closePath();
+    for (var y = 0; y < mapHeight; y++) {
+        for (var x = 0; x < mapWidth; x++) {
+            if (x < mapWidth-1) {
+                var te = hasDirection(map[y][x].walls,"e");
+                var nw = hasDirection(map[y][x+1].walls,"w");
+                    if (te || nw) {
+                        ctx.setLineDash([]);
+                        if (!(te && nw)) {
+                            if (nw)
+                                canvas_arrow(ctx,(x+.8)*fieldPixelWidth,(y+.5)*fieldPixelWidth,(x+1.2)*fieldPixelWidth,(y+.5)*fieldPixelWidth,ctx.lineWidth * 3);
+                            else
+                                canvas_arrow(ctx,(x+1.2)*fieldPixelWidth,(y+.5)*fieldPixelWidth,(x+.8)*fieldPixelWidth,(y+.5)*fieldPixelWidth,ctx.lineWidth * 3);
+                            ctx.setLineDash([ctx.lineWidth * 3,ctx.lineWidth * 3]);                        
+                        }
+                        ctx.beginPath();
+                        ctx.moveTo((x+1)*fieldPixelWidth, (y)*fieldPixelWidth);
+                        ctx.lineTo((x+1)*fieldPixelWidth, (y+1)*fieldPixelWidth);
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
             }
             
-            if (ts || nn) {
-                ctx.setLineDash([]);
-                if (!(ts && nn)) {
-                    if (nn)
-                        canvas_arrow(ctx,(x+.5)*fieldPixelWidth,(y+.8)*fieldPixelWidth,(x+.5)*fieldPixelWidth,(y+1.2)*fieldPixelWidth,ctx.lineWidth * 3);
-                    else
-                        canvas_arrow(ctx,(x+.5)*fieldPixelWidth,(y+1.2)*fieldPixelWidth,(x+.5)*fieldPixelWidth,(y+.8)*fieldPixelWidth,ctx.lineWidth * 3);
-                    ctx.setLineDash([ctx.lineWidth * 3,ctx.lineWidth * 3]);
+            if (y < mapHeight-1) {
+                var ts = hasDirection(map[y][x].walls,"s");
+                var nn = hasDirection(map[y+1][x].walls,"n");
+                if (ts || nn) {
+                    ctx.setLineDash([]);
+                    if (!(ts && nn)) {
+                        if (nn)
+                            canvas_arrow(ctx,(x+.5)*fieldPixelWidth,(y+.8)*fieldPixelWidth,(x+.5)*fieldPixelWidth,(y+1.2)*fieldPixelWidth,ctx.lineWidth * 3);
+                        else
+                            canvas_arrow(ctx,(x+.5)*fieldPixelWidth,(y+1.2)*fieldPixelWidth,(x+.5)*fieldPixelWidth,(y+.8)*fieldPixelWidth,ctx.lineWidth * 3);
+                        ctx.setLineDash([ctx.lineWidth * 3,ctx.lineWidth * 3]);
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo((x)*fieldPixelWidth, (y+1)*fieldPixelWidth);
+                    ctx.lineTo((x+1)*fieldPixelWidth, (y+1)*fieldPixelWidth);
+                    ctx.stroke();
+                    ctx.closePath();
                 }
-                ctx.beginPath();
-                ctx.moveTo((x)*fieldPixelWidth, (y+1)*fieldPixelWidth);
-                ctx.lineTo((x+1)*fieldPixelWidth, (y+1)*fieldPixelWidth);
-                ctx.stroke();
-                ctx.closePath();
             }
         }
     }
