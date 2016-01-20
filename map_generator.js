@@ -385,7 +385,8 @@ function downloadMap(map) {
                 "fields": map,
                 "gameParameters": {
                     "movementSpeed" : parseFloat($('#inputRobotSpeed').val()),
-                    "maxStayTime": parseInt($('#inputHesitationTime').val())
+                    "maxStayTime": 0,
+                    "rotationSpeed": parseFloat($('#inputRobotRotationSpeed').val())
                 }
             }
     });
